@@ -1,0 +1,10 @@
+---
+Name: mobileloginroutes
+After:
+  - '#rootroutes'
+  - '#coreroutes'
+---
+
+SilverStripe\Control\Director:
+  rules:
+    'mobilelogin': 'MobileLoginPageController'
