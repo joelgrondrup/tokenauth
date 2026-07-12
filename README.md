@@ -63,6 +63,8 @@ Joelgrondrup\Tokenauth\Model\DeviceToken:
 
 Joelgrondrup\Tokenauth\Controllers\MobileLoginPageController:
   cors_allow_origin: ''    # set to an origin (or '*') to enable CORS for Flutter web
+  require_css: []          # theme CSS to load on the QR page (see "Styling")
+  require_javascript: []   # theme JS to load on the QR page
 ```
 
 ## Styling / theming the QR page
@@ -77,6 +79,65 @@ with `['MobileLogin', 'Page']`, so:
 
 `$Title` is available in `Page.ss` (defaults to *"Mobile login"*, translatable
 via the `MobileLoginPageController.Title` i18n key).
+
+### Loading your theme's CSS / JavaScript
+
+The page uses your theme's chrome, but the default controller extends a plain
+`Controller`, so it does **not** run your project's `PageController::init()` —
+which is usually where CSS/JS is registered via the `Requirements` API. That is
+why an out-of-the-box page can render unstyled.
+
+Two ways to fix it:
+
+**1. List the assets in config (recommended — simple and robust).** Point the
+page at the same files your theme loads:
+
+```yaml
+Joelgrondrup\Tokenauth\Controllers\MobileLoginPageController:
+  require_css:
+    - 'app/client/dist/styles/main.css'   # your theme's CSS
+  require_javascript:
+    - 'app/client/dist/js/main.js'
+```
+
+The controller registers these via `Requirements` on every render, so they are
+injected into your `Page.ss` `<head>`/`<body>` like any normal page.
+
+**2. Base the controller on your `PageController` (full inheritance).** If you'd
+rather inherit *everything* your `PageController::init()` sets up, make your own
+controller from the shipped trait and point the route at it. Create it in your
+app:
+
+```php
+// app/src/Control/TokenLoginController.php
+class TokenLoginController extends PageController   // your themed base controller
+{
+    use \Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait;
+}
+```
+
+…and override the route:
+
+```yaml
+# app/_config/tokenauth-routes.yml
+---
+Name: app-tokenauth-routes
+After: '#mobileloginroutes'
+---
+SilverStripe\Control\Director:
+  rules:
+    'mobilelogin//$Action': 'TokenLoginController'
+```
+
+> **Collision caveat.** The trait defines the actions `index`, `qrcode`,
+> `status`, `pair`, `login`, `signout`, `revoke` (plus `init`, `Title`). If your
+> `PageController` already defines a method with one of those names and an
+> incompatible signature, PHP will fatal. (This is why the session endpoint is
+> `signout`, not `logout` — most `PageController`s already have `logout()`.) For
+> any remaining clash, alias the trait method in your class, e.g.
+> `use TokenLoginControllerTrait { index as tokenIndex; }`, or just use option 1.
+
+### Overriding the template
 
 Because it uses the normal template cascade, you override it from your **app or
 theme** — no module changes, nothing to fork. Templates in `app/templates/`
@@ -121,7 +182,7 @@ All responses are JSON with a `success` boolean.
 | GET    | `/mobilelogin/status?id=`   | session (member)    | `{ paired, expired }` — poll whether a pairing token was claimed. |
 | GET    | `/mobilelogin/pair?token=`  | pairing token       | Exchange a pairing token for a device token. |
 | POST   | `/mobilelogin/login`        | device token        | Open a SilverStripe session. Token via `device_token` field or `X-Device-Token` header. |
-| POST   | `/mobilelogin/logout`       | session             | End the current session. |
+| POST   | `/mobilelogin/signout`      | session             | End the current session. |
 | POST   | `/mobilelogin/revoke`       | device token        | Delete (forget) a device token. |
 
 ### Example: pairing

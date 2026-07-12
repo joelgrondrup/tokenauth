@@ -11,7 +11,12 @@ Joelgrondrup\Tokenauth\Model\DeviceToken:
   lifetime: 2592000
   sliding_expiry: true
 
-# Set cors_allow_origin (e.g. 'https://app.example.com' or '*') to enable CORS
-# for browser-based Flutter web builds. Left empty, no CORS headers are sent.
+# cors_allow_origin: set (e.g. 'https://app.example.com' or '*') to enable CORS
+#   for browser-based Flutter web builds. Empty = no CORS headers.
+# require_css / require_javascript: theme assets to load on the QR page so it
+#   picks up your styling (the default controller does not run your
+#   PageController::init()). See "Styling / theming the QR page" in the README.
 Joelgrondrup\Tokenauth\Controllers\MobileLoginPageController:
   cors_allow_origin: ''
+  require_css: []
+  require_javascript: []
