@@ -62,6 +62,12 @@ class MobileLoginPageController extends Controller
             return $this->json(['success' => false, 'error' => 'Not authenticated'], 401);
         }
 
+        // Opportunistic, version-agnostic cleanup. This runs only when the QR
+        // page mints a token (a low-frequency, member-triggered action - not the
+        // fast status poll), so it needs no cron and no BuildTask.
+        PairingToken::purgeExpired();
+        DeviceToken::purgeExpired();
+
         $raw = PairingToken::generate($member);
         $pairing = PairingToken::findValid($raw);
 

@@ -1,9 +1,9 @@
 # Token Auth
 
-A SilverStripe 5 module that lets a companion mobile app (built here with
-Flutter, for iOS and Android) log a member into SilverStripe by scanning a QR
-code once, then re-using a stored **device token** to open a real SilverStripe
-session again and again until it expires.
+A SilverStripe module (compatible with **CMS 5 and CMS 6**) that lets a
+companion mobile app (built here with Flutter, for iOS and Android) log a member
+into SilverStripe by scanning a QR code once, then re-using a stored **device
+token** to open a real SilverStripe session again and again until it expires.
 
 ## How it works
 
@@ -110,10 +110,17 @@ then send the user back through the QR pairing flow.
 
 - Admins can review and delete tokens in the CMS under **Tokens**
   (`Joelgrondrup\Tokenauth\ModelAdmin\TokenAdmin`).
-- Expired/used rows are removed by the build task, ideal for a nightly cron:
+- Expired/used rows are purged automatically (and cheaply) whenever the QR page
+  mints a token, so no cron is required. Expired tokens are always rejected at
+  validation time regardless, so leftover rows are harmless.
+- If you want a scheduled purge as well, both models expose a version-agnostic
+  `purgeExpired()` you can call from a task or cron in your own project (the
+  `BuildTask` API differs between CMS 5 and CMS 6, so the module deliberately
+  ships no task of its own):
 
-  ```bash
-  ./vendor/bin/sake dev/tasks/tokenauth-purge-expired
+  ```php
+  \Joelgrondrup\Tokenauth\Model\PairingToken::purgeExpired();
+  \Joelgrondrup\Tokenauth\Model\DeviceToken::purgeExpired();
   ```
 
 ## Security notes
