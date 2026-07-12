@@ -65,6 +65,51 @@ Joelgrondrup\Tokenauth\Controllers\MobileLoginPageController:
   cors_allow_origin: ''    # set to an origin (or '*') to enable CORS for Flutter web
 ```
 
+## Styling / theming the QR page
+
+The `/mobilelogin` page renders **inside your theme**. The controller renders
+with `['MobileLogin', 'Page']`, so:
+
+- your theme's `Page.ss` provides the page chrome (header, nav, footer, `<head>`),
+  exactly like a normal page; and
+- the module's `templates/Layout/MobileLogin.ss` supplies just the QR content
+  that drops into `$Layout`.
+
+`$Title` is available in `Page.ss` (defaults to *"Mobile login"*, translatable
+via the `MobileLoginPageController.Title` i18n key).
+
+Because it uses the normal template cascade, you override it from your **app or
+theme** — no module changes, nothing to fork. Templates in `app/templates/`
+(and any enabled theme) take precedence over the module's.
+
+**Restyle the QR content, keep your site chrome** — copy the module's layout
+template and edit it:
+
+```
+app/templates/Layout/MobileLogin.ss          # your version wins
+# (or) themes/<your-theme>/templates/Layout/MobileLogin.ss
+```
+
+Everything inside is yours — markup, CSS, the polling `<script>`. Just keep the
+element IDs the script relies on (`tokenauth-qr`, `tokenauth-status`,
+`tokenauth-overlay`, `tokenauth-refresh`) or adjust the script to match. The
+page talks to `mobilelogin/qrcode` and `mobilelogin/status` (see the API below),
+so you can rewrite the front-end however you like.
+
+**Replace the whole page (bypass your `Page.ss` chrome)** — add a *top-level*
+template (note: not under `Layout/`):
+
+```
+app/templates/MobileLogin.ss                  # becomes the full page, standalone
+```
+
+When a top-level `MobileLogin.ss` exists it is used as the entire response and
+your theme's `Page.ss` is skipped — handy for a minimal, standalone login screen.
+
+> The module intentionally ships **no** top-level `MobileLogin.ss`, only
+> `Layout/MobileLogin.ss`, which is what lets your theme's `Page.ss` wrap it by
+> default.
+
 ## HTTP API (for the app)
 
 All responses are JSON with a `success` boolean.

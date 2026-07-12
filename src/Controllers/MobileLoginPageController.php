@@ -49,7 +49,15 @@ class MobileLoginPageController extends Controller
             return Security::permissionFailure($this);
         }
 
-        return $this->renderWith(['MobileLogin']);
+        return $this->renderWith(['MobileLogin', 'Page']);
+    }
+
+    /**
+     * Page title, available as $Title in the theme's Page.ss.
+     */
+    public function Title(): string
+    {
+        return _t(__CLASS__ . '.Title', 'Mobile login');
     }
 
     /**
