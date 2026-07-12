@@ -30,6 +30,13 @@ use SilverStripe\Security\Security;
  */
 class MobileLoginPageController extends Controller
 {
+    /**
+     * Matches the route in _config/routes.yml. Lets the theme call $Link on
+     * this controller (e.g. from a Page.ss sidenav include) without tripping
+     * RequestHandler's "no url_segment defined" warning.
+     */
+    private static $url_segment = 'mobilelogin';
+
     private static $allowed_actions = [
         'qrcode',
         'status',
