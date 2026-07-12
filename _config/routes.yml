@@ -4,7 +4,6 @@ After:
   - '#rootroutes'
   - '#coreroutes'
 ---
-
 SilverStripe\Control\Director:
   rules:
-    'mobilelogin': 'MobileLoginPageController'
+    'mobilelogin//$Action': 'Joelgrondrup\Tokenauth\Controllers\MobileLoginPageController'

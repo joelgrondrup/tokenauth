@@ -1,11 +1,9 @@
 {
     "name": "joelgrondrup/tokenauth",
-    "description": "A SilverStripe Module to make login via tokens",
-    "autoload": {
-        "psr-4": {
-            "Joelgrondrup\\Tokenauth\\": "src/"
-        }
-    },
+    "description": "A SilverStripe module for logging in via QR-provisioned device tokens (built for a Flutter companion app)",
+    "type": "silverstripe-vendormodule",
+    "license": "BSD-3-Clause",
+    "keywords": ["silverstripe", "authentication", "token", "qr", "mobile"],
     "authors": [
         {
             "name": "joelgrondrup",
@@ -13,6 +11,19 @@
         }
     ],
     "require": {
-        "endroid/qr-code":"^6.0"
-    }
+        "php": "^8.1",
+        "silverstripe/framework": "^5",
+        "silverstripe/admin": "^2",
+        "endroid/qr-code": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Joelgrondrup\\Tokenauth\\": "src/"
+        }
+    },
+    "extra": {
+        "expose": []
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

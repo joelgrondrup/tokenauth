@@ -1,0 +1,17 @@
+---
+Name: tokenauth
+---
+# Lifetime of the short-lived pairing token embedded in the QR code (seconds).
+Joelgrondrup\Tokenauth\Model\PairingToken:
+  lifetime: 120
+
+# Lifetime of the device token stored on the phone (seconds). Default: 30 days.
+# Set sliding_expiry to false for a hard expiry a fixed period after pairing.
+Joelgrondrup\Tokenauth\Model\DeviceToken:
+  lifetime: 2592000
+  sliding_expiry: true
+
+# Set cors_allow_origin (e.g. 'https://app.example.com' or '*') to enable CORS
+# for browser-based Flutter web builds. Left empty, no CORS headers are sent.
+Joelgrondrup\Tokenauth\Controllers\MobileLoginPageController:
+  cors_allow_origin: ''

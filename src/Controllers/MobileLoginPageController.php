@@ -1,97 +1,247 @@
 <?php
 
-use SilverStripe\ORM\FieldType\DBDatetime;
-use SilverStripe\CMS\Controllers\ContentController;
-use SilverStripe\Security\RandomGenerator;
-use SilverStripe\Security\Security;
+namespace Joelgrondrup\Tokenauth\Controllers;
+
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\RoundBlockSizeMode;
 use Endroid\QrCode\Writer\PngWriter;
+use Joelgrondrup\Tokenauth\Model\DeviceToken;
+use Joelgrondrup\Tokenauth\Model\PairingToken;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Security\IdentityStore;
+use SilverStripe\Security\Security;
 
-class MobileLoginPageController extends ContentController{
-
+/**
+ * Front controller for the token-based mobile login flow.
+ *
+ *  GET  mobilelogin            The QR page (requires a logged-in CMS member).
+ *  GET  mobilelogin/qrcode     JSON: a fresh pairing QR for the current member.
+ *  GET  mobilelogin/status     JSON: has a given pairing token been claimed yet?
+ *  GET  mobilelogin/pair       App exchanges a pairing token for a device token.
+ *  POST mobilelogin/login      App presents a device token to open a session.
+ *  POST mobilelogin/logout     End the current session.
+ *  POST mobilelogin/revoke     App forgets (deletes) its device token.
+ */
+class MobileLoginPageController extends Controller
+{
     private static $allowed_actions = [
-        'pair'
+        'qrcode',
+        'status',
+        'pair',
+        'login',
+        'logout',
+        'revoke',
     ];
 
-    public function index (){
-
-        return $this->renderWith(["MobileLoginPage"]);
-
-    }
-
-    public function pair(HTTPRequest $request){
-
-        $token = $request->getVar('token');
-        $hash = hash('sha256', $token);
-
-        $pairingToken = PairingToken::get()->filter('TokenHash', $hash)->first();
-
-        if (!$pairingToken || !$pairingToken->isValid()) {
-            return $this->json(['error' => 'Invalid or expired token'], 400);
+    /**
+     * The QR page. Only makes sense for an authenticated member, since the
+     * pairing token it produces is bound to that member's account.
+     */
+    public function index(HTTPRequest $request)
+    {
+        if (!Security::getCurrentUser()) {
+            return Security::permissionFailure($this);
         }
 
-        $member = $pairingToken->Member();
+        return $this->renderWith(['MobileLogin']);
+    }
 
-        $randomGenerator = new RandomGenerator();
+    /**
+     * Produce a fresh pairing token + QR image for the current member.
+     */
+    public function qrcode(HTTPRequest $request)
+    {
+        $member = Security::getCurrentUser();
+        if (!$member) {
+            return $this->json(['success' => false, 'error' => 'Not authenticated'], 401);
+        }
 
-        $deviceRawToken = $randomGenerator->randomToken();
-        $deviceHash = hash('sha256', $deviceRawToken);
+        $raw = PairingToken::generate($member);
+        $pairing = PairingToken::findValid($raw);
 
-        DeviceToken::create([
-            'TokenHash' => $deviceHash,
-            'MemberID' => $member->ID,
-            'DeviceInfo' => 'Scanned from QR on desktop',
-            'LastUsed' => DBDatetime::now()
-        ])->write();
-
-        // Optional: delete pairing token after use
-        $pairingToken->delete();
+        $qrUrl = Director::absoluteURL('mobilelogin/pair') . '?token=' . $raw;
 
         return $this->json([
-            'device_token' => $deviceRawToken,
-            'user_id' => $member->ID,
+            'success'    => true,
+            'id'         => $pairing ? (int) $pairing->ID : null,
+            'image'      => $this->buildQrDataUri($qrUrl),
+            'expires_in' => (int) PairingToken::config()->get('lifetime'),
         ]);
-
     }
 
-    protected function json($data, $code = 200)
+    /**
+     * Poll endpoint for the desktop page: reports whether the pairing token
+     * with the given ID (owned by the current member) has been claimed.
+     */
+    public function status(HTTPRequest $request)
     {
-        return HTTPResponse::create(json_encode($data), $code)
-            ->addHeader('Content-Type', 'application/json');
+        $member = Security::getCurrentUser();
+        if (!$member) {
+            return $this->json(['success' => false, 'error' => 'Not authenticated'], 401);
+        }
+
+        $id = (int) $request->getVar('id');
+        $pairing = PairingToken::get()->byID($id);
+
+        if (!$pairing || (int) $pairing->MemberID !== (int) $member->ID) {
+            // Unknown / not ours: most likely consumed then purged -> treat as expired.
+            return $this->json(['success' => true, 'paired' => false, 'expired' => true]);
+        }
+
+        return $this->json([
+            'success' => true,
+            'paired'  => (bool) $pairing->Used,
+            'expired' => !$pairing->isValid() && !$pairing->Used,
+        ]);
     }
 
-    public function generatepairingtoken(){
+    /**
+     * The mobile app calls this with the raw pairing token scanned from the QR.
+     * On success it receives a long-lived device token to store on the device.
+     */
+    public function pair(HTTPRequest $request)
+    {
+        $raw = $request->getVar('token') ?: $request->postVar('token');
+        if (!$raw) {
+            return $this->json(['success' => false, 'error' => 'Missing token'], 400);
+        }
 
-        $randomGenerator = new RandomGenerator();
-        $rawToken = $randomGenerator->randomToken();
+        $pairing = PairingToken::findValid((string) $raw);
+        if (!$pairing) {
+            return $this->json(['success' => false, 'error' => 'Invalid or expired token'], 400);
+        }
 
-        $hash = hash('sha256', $rawToken);
+        $member = $pairing->Member();
+        if (!$member || !$member->exists()) {
+            return $this->json(['success' => false, 'error' => 'Token has no member'], 400);
+        }
 
-        PairingToken::create([
-            'TokenHash' => $hash,
-            'MemberID' => Security::getCurrentUser()->ID,
-            'Expires' => DBDatetime::now()->modify('+2 minutes'),
-        ])->write();
+        // One-time use: mark claimed so the desktop can detect it, then issue
+        // the device token.
+        $pairing->Used = true;
+        $pairing->write();
 
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
-        $host = $_SERVER['HTTP_HOST'];
+        $deviceInfo = (string) ($request->getHeader('User-Agent')
+            ?: $request->postVar('device_info')
+            ?: 'Unknown device');
 
-        $baseUrl = $scheme . '://' . $host;
+        $deviceRaw = DeviceToken::issue($member, $deviceInfo);
 
-        $qrUrl = $baseUrl . "/mobilelogin/pair?token=$rawToken";
+        return $this->json([
+            'success'      => true,
+            'device_token' => $deviceRaw,
+            'expires_in'   => (int) DeviceToken::config()->get('lifetime'),
+            'member'       => $this->memberPayload($member),
+        ]);
+    }
 
-        $writer = new PngWriter();
+    /**
+     * The app presents its stored device token (POST body "device_token" or the
+     * X-Device-Token header) to establish a real SilverStripe session.
+     */
+    public function login(HTTPRequest $request)
+    {
+        if (!$request->isPOST()) {
+            return $this->json(['success' => false, 'error' => 'POST required'], 405);
+        }
 
+        $raw = $request->getHeader('X-Device-Token') ?: $request->postVar('device_token');
+        if (!$raw) {
+            return $this->json(['success' => false, 'error' => 'Missing device token'], 400);
+        }
+
+        $device = DeviceToken::findValid((string) $raw);
+        if (!$device) {
+            return $this->json(['success' => false, 'error' => 'Invalid or expired device token'], 401);
+        }
+
+        $member = $device->Member();
+        if (!$member || !$member->exists()) {
+            return $this->json(['success' => false, 'error' => 'Token has no member'], 401);
+        }
+
+        // Log in through SilverStripe's own security system: this sets the
+        // session + cookies on the response the app receives.
+        Injector::inst()->get(IdentityStore::class)->logIn($member, false, $request);
+        $device->recordUse();
+
+        return $this->json([
+            'success'    => true,
+            'expires_in' => (int) DeviceToken::config()->get('lifetime'),
+            'member'     => $this->memberPayload($member),
+        ]);
+    }
+
+    /**
+     * End the current session.
+     */
+    public function logout(HTTPRequest $request)
+    {
+        Injector::inst()->get(IdentityStore::class)->logOut($request);
+        return $this->json(['success' => true]);
+    }
+
+    /**
+     * The app asks the server to forget a device token entirely.
+     */
+    public function revoke(HTTPRequest $request)
+    {
+        $raw = $request->getHeader('X-Device-Token') ?: $request->postVar('device_token');
+        if (!$raw) {
+            return $this->json(['success' => false, 'error' => 'Missing device token'], 400);
+        }
+
+        $device = DeviceToken::get()->filter('TokenHash', hash('sha256', (string) $raw))->first();
+        if ($device) {
+            $device->delete();
+        }
+
+        return $this->json(['success' => true]);
+    }
+
+    /**
+     * Consistent JSON response with (optional) CORS headers for browser-based
+     * Flutter web builds.
+     */
+    protected function json($data, int $code = 200): HTTPResponse
+    {
+        $response = HTTPResponse::create(json_encode($data), $code)
+            ->addHeader('Content-Type', 'application/json');
+
+        $origin = (string) $this->config()->get('cors_allow_origin');
+        if ($origin !== '') {
+            $response->addHeader('Access-Control-Allow-Origin', $origin);
+            $response->addHeader('Access-Control-Allow-Headers', 'Content-Type, X-Device-Token');
+            $response->addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        }
+
+        return $response;
+    }
+
+    protected function memberPayload($member): array
+    {
+        return [
+            'id'         => (int) $member->ID,
+            'first_name' => $member->FirstName,
+            'surname'    => $member->Surname,
+            'email'      => $member->Email,
+            'locale'     => $member->Locale,
+        ];
+    }
+
+    protected function buildQrDataUri(string $data): string
+    {
         $builder = new Builder(
             writer: new PngWriter(),
             writerOptions: [],
             validateResult: false,
-            data: $qrUrl,
+            data: $data,
             encoding: new Encoding('UTF-8'),
             errorCorrectionLevel: ErrorCorrectionLevel::High,
             size: 300,
@@ -99,10 +249,6 @@ class MobileLoginPageController extends ContentController{
             roundBlockSizeMode: RoundBlockSizeMode::Margin
         );
 
-        $result = $builder->build();
-
-        return $result->getDataUri();
-
+        return $builder->build()->getDataUri();
     }
-
 }
