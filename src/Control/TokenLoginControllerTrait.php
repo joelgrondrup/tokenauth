@@ -12,6 +12,7 @@ use Joelgrondrup\Tokenauth\Model\PairingToken;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
+use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\IdentityStore;
 use SilverStripe\Security\Security;
@@ -104,6 +105,26 @@ trait TokenLoginControllerTrait
     public function Title(): string
     {
         return _t(self::class . '.Title', 'Mobile login');
+    }
+
+    /**
+     * App Store link for the QR page, hardcoded in .env as TOKENAUTH_IOS_APP_URL.
+     * Returns null when unset so the template can hide the button.
+     */
+    public function IOSAppURL(): ?string
+    {
+        $url = Environment::getEnv('TOKENAUTH_IOS_APP_URL');
+        return $url ? (string) $url : null;
+    }
+
+    /**
+     * Google Play link, hardcoded in .env as TOKENAUTH_ANDROID_APP_URL.
+     * Returns null when unset so the template can hide the button.
+     */
+    public function AndroidAppURL(): ?string
+    {
+        $url = Environment::getEnv('TOKENAUTH_ANDROID_APP_URL');
+        return $url ? (string) $url : null;
     }
 
     /**

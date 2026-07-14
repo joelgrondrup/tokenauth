@@ -8,9 +8,20 @@
         .tokenauth-mobilelogin .status { margin-top: 1rem; min-height: 1.2em; }
         .tokenauth-mobilelogin .status.ok { color: #14a44d; }
         .tokenauth-mobilelogin .status.warn { color: #b45309; }
+        .tokenauth-mobilelogin .app-stores { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+        .tokenauth-mobilelogin .app-stores a { display: inline-flex; align-items: center; gap: .5rem; padding: .55rem 1rem; border-radius: 8px; background: #111; color: #fff; text-decoration: none; font-size: .9rem; }
+        .tokenauth-mobilelogin .app-stores a:hover { background: #000; }
     </style>
 
     <h1>Log in with your app</h1>
+
+    <% if $IOSAppURL || $AndroidAppURL %>
+        <div class="app-stores">
+            <% if $IOSAppURL %><a href="$IOSAppURL" target="_blank" rel="noopener">Download on the App Store</a><% end_if %>
+            <% if $AndroidAppURL %><a href="$AndroidAppURL" target="_blank" rel="noopener">Get it on Google Play</a><% end_if %>
+        </div>
+    <% end_if %>
+
     <p>Open the app and scan this code. It refreshes automatically.</p>
     <div class="qr-wrap">
         <img id="tokenauth-qr" alt="Login QR code" width="300" height="300">

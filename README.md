@@ -80,6 +80,20 @@ with `['MobileLogin', 'Page']`, so:
 `$Title` is available in `Page.ss` (defaults to *"Mobile login"*, translatable
 via the `MobileLoginPageController.Title` i18n key).
 
+### App store buttons
+
+The page can show "Download on the App Store" / "Get it on Google Play" buttons.
+They are driven entirely by two `.env` variables — set either (or both) and the
+matching button appears; leave them out and nothing shows:
+
+```dotenv
+TOKENAUTH_IOS_APP_URL="https://apps.apple.com/app/idXXXXXXXXX"
+TOKENAUTH_ANDROID_APP_URL="https://play.google.com/store/apps/details?id=your.app.id"
+```
+
+The values are exposed to the template as `$IOSAppURL` and `$AndroidAppURL` if
+you want to restyle them in your own template override.
+
 ### Loading your theme's CSS / JavaScript
 
 The page uses your theme's chrome, but the default controller extends a plain
