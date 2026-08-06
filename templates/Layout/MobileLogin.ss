@@ -13,25 +13,33 @@
         .tokenauth-mobilelogin .app-stores a:hover { background: #000; }
     </style>
 
-    <h1>Log in with your app</h1>
+    <h1><%t Joelgrondrup\Tokenauth\MobileLogin.HEADING 'Log in with your app' %></h1>
 
     <% if $IOSAppURL || $AndroidAppURL %>
         <div class="app-stores">
-            <% if $IOSAppURL %><a href="$IOSAppURL" target="_blank" rel="noopener">Download on the App Store</a><% end_if %>
-            <% if $AndroidAppURL %><a href="$AndroidAppURL" target="_blank" rel="noopener">Get it on Google Play</a><% end_if %>
+            <% if $IOSAppURL %><a href="$IOSAppURL" target="_blank" rel="noopener"><%t Joelgrondrup\Tokenauth\MobileLogin.APPSTORE 'Download on the App Store' %></a><% end_if %>
+            <% if $AndroidAppURL %><a href="$AndroidAppURL" target="_blank" rel="noopener"><%t Joelgrondrup\Tokenauth\MobileLogin.GOOGLEPLAY 'Get it on Google Play' %></a><% end_if %>
         </div>
     <% end_if %>
 
-    <p>Open the app and scan this code. It refreshes automatically.</p>
+    <p><%t Joelgrondrup\Tokenauth\MobileLogin.INTRO 'Open the app and scan this code. It refreshes automatically.' %></p>
     <div class="qr-wrap">
-        <img id="tokenauth-qr" alt="Login QR code" width="300" height="300">
+        <img id="tokenauth-qr" alt="<%t Joelgrondrup\Tokenauth\MobileLogin.QRALT 'Login QR code' %>" width="300" height="300">
         <div class="overlay" id="tokenauth-overlay"></div>
     </div>
     <div class="status" id="tokenauth-status"></div>
-    <p><button id="tokenauth-refresh" type="button">New code</button></p>
+    <p><button id="tokenauth-refresh" type="button"><%t Joelgrondrup\Tokenauth\MobileLogin.NEWCODE 'New code' %></button></p>
 
     <script>
         (function () {
+            var i18n = {
+                paired: "<%t Joelgrondrup\Tokenauth\MobileLogin.PAIRED 'Paired' %>",
+                pairedStatus: "<%t Joelgrondrup\Tokenauth\MobileLogin.PAIREDSTATUS 'Your device is now paired.' %>",
+                expired: "<%t Joelgrondrup\Tokenauth\MobileLogin.EXPIRED 'Code expired.' %>",
+                waiting: "<%t Joelgrondrup\Tokenauth\MobileLogin.WAITING 'Waiting for scan…' %>",
+                createError: "<%t Joelgrondrup\Tokenauth\MobileLogin.CREATEERROR 'Could not create code.' %>",
+                networkError: "<%t Joelgrondrup\Tokenauth\MobileLogin.NETWORKERROR 'Network error.' %>"
+            };
             var qr = document.getElementById('tokenauth-qr');
             var overlay = document.getElementById('tokenauth-overlay');
             var status = document.getElementById('tokenauth-status');
@@ -44,22 +52,22 @@
                 fetch('mobilelogin/status?id=' + encodeURIComponent(id), { credentials: 'same-origin' })
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
-                        if (data.paired) { clearTimers(); showOverlay('✓ Paired'); setStatus('Your device is now paired.', 'ok'); }
-                        else if (data.expired) { clearTimers(); setStatus('Code expired.', 'warn'); }
+                        if (data.paired) { clearTimers(); showOverlay('✓ ' + i18n.paired); setStatus(i18n.pairedStatus, 'ok'); }
+                        else if (data.expired) { clearTimers(); setStatus(i18n.expired, 'warn'); }
                     }).catch(function () {});
             }
             function load() {
                 clearTimers();
                 overlay.classList.remove('show');
-                setStatus('Waiting for scan…');
+                setStatus(i18n.waiting);
                 fetch('mobilelogin/qrcode', { credentials: 'same-origin' })
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
-                        if (!data.success) { setStatus(data.error || 'Could not create code.', 'warn'); return; }
+                        if (!data.success) { setStatus(data.error || i18n.createError, 'warn'); return; }
                         qr.src = data.image;
                         pollTimer = setInterval(function () { poll(data.id); }, 2500);
                         refreshTimer = setTimeout(load, Math.max(5, data.expires_in - 5) * 1000);
-                    }).catch(function () { setStatus('Network error.', 'warn'); });
+                    }).catch(function () { setStatus(i18n.networkError, 'warn'); });
             }
             refreshBtn.addEventListener('click', load);
             load();

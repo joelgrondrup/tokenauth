@@ -46,14 +46,28 @@ class DeviceToken extends DataObject
         'TokenHash' => true,
     ];
 
+    // Listed without titles on purpose: the (translated) titles come from
+    // fieldLabels() below.
     private static $summary_fields = [
-        'Member.Title' => 'Member',
-        'DeviceInfo'   => 'Device',
-        'LastUsed'     => 'Last used',
-        'Expires'      => 'Expires',
+        'Member.Title',
+        'DeviceInfo',
+        'LastUsed',
+        'Expires',
     ];
 
     private static $default_sort = 'LastUsed DESC';
+
+    public function fieldLabels($includerelations = true)
+    {
+        $labels = parent::fieldLabels($includerelations);
+
+        $labels['Member.Title'] = _t(self::class . '.MEMBER', 'Member');
+        $labels['DeviceInfo']   = _t(self::class . '.DEVICEINFO', 'Device');
+        $labels['LastUsed']     = _t(self::class . '.LASTUSED', 'Last used');
+        $labels['Expires']      = _t(self::class . '.EXPIRES', 'Expires');
+
+        return $labels;
+    }
 
     /**
      * Issue a new device token for a member and return the RAW value.

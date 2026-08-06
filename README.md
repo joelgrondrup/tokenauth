@@ -185,6 +185,34 @@ your theme's `Page.ss` is skipped — handy for a minimal, standalone login scre
 > `Layout/MobileLogin.ss`, which is what lets your theme's `Page.ss` wrap it by
 > default.
 
+## Translations
+
+All user-facing strings — the QR page, the CMS labels, and the `error` messages
+in the JSON responses — go through SilverStripe's i18n. The module ships
+`lang/en.yml` and `lang/da.yml`; strings follow the site locale
+(`SilverStripe\i18n\i18n.default_locale`, or the member's own `Locale`).
+
+The entity namespaces are:
+
+| Namespace | Covers |
+|-----------|--------|
+| `Joelgrondrup\Tokenauth\MobileLogin` | The QR page template (headings, buttons, status messages). |
+| `Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait` | Page title and the JSON `error` strings. |
+| `Joelgrondrup\Tokenauth\Model\DeviceToken` / `...\PairingToken` | CMS record + column names. |
+| `Joelgrondrup\Tokenauth\ModelAdmin\TokenAdmin` | The CMS menu title. |
+
+The controller strings are namespaced on the **trait**, not on `self::class`, so
+they keep working when you attach the trait to your own controller (see
+"Styling / theming" above).
+
+To add a language, drop a `lang/<locale>.yml` into the module, or override
+individual strings from your project's own `app/lang/<locale>.yml` using the
+same namespaces — app translations win over module ones.
+
+> The page template interpolates a few strings into an inline `<script>` block.
+> They are emitted raw, inside double-quoted JS strings, so a translation may
+> contain apostrophes but must not contain a double quote.
+
 ## HTTP API (for the app)
 
 All responses are JSON with a `success` boolean.

@@ -101,10 +101,17 @@ trait TokenLoginControllerTrait
 
     /**
      * Page title, available as $Title in the theme's Page.ss.
+     *
+     * Translatable strings in this trait are namespaced on the trait itself
+     * rather than self::class, so a project controller that `use`s the trait
+     * picks up the module's translations instead of needing its own.
      */
     public function Title(): string
     {
-        return _t(self::class . '.Title', 'Mobile login');
+        return _t(
+            'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.TITLE',
+            'Mobile login'
+        );
     }
 
     /**
@@ -134,7 +141,10 @@ trait TokenLoginControllerTrait
     {
         $member = Security::getCurrentUser();
         if (!$member) {
-            return $this->json(['success' => false, 'error' => 'Not authenticated'], 401);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORNOTAUTHENTICATED',
+                'Not authenticated'
+            )], 401);
         }
 
         // Opportunistic, version-agnostic cleanup. This runs only when the QR
@@ -164,7 +174,10 @@ trait TokenLoginControllerTrait
     {
         $member = Security::getCurrentUser();
         if (!$member) {
-            return $this->json(['success' => false, 'error' => 'Not authenticated'], 401);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORNOTAUTHENTICATED',
+                'Not authenticated'
+            )], 401);
         }
 
         $id = (int) $request->getVar('id');
@@ -190,17 +203,26 @@ trait TokenLoginControllerTrait
     {
         $raw = $request->getVar('token') ?: $request->postVar('token');
         if (!$raw) {
-            return $this->json(['success' => false, 'error' => 'Missing token'], 400);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORMISSINGTOKEN',
+                'Missing token'
+            )], 400);
         }
 
         $pairing = PairingToken::findValid((string) $raw);
         if (!$pairing) {
-            return $this->json(['success' => false, 'error' => 'Invalid or expired token'], 400);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORINVALIDTOKEN',
+                'Invalid or expired token'
+            )], 400);
         }
 
         $member = $pairing->Member();
         if (!$member || !$member->exists()) {
-            return $this->json(['success' => false, 'error' => 'Token has no member'], 400);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORNOMEMBER',
+                'Token has no member'
+            )], 400);
         }
 
         // One-time use: mark claimed so the desktop can detect it, then issue
@@ -210,7 +232,10 @@ trait TokenLoginControllerTrait
 
         $deviceInfo = (string) ($request->getHeader('User-Agent')
             ?: $request->postVar('device_info')
-            ?: 'Unknown device');
+            ?: _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.UNKNOWNDEVICE',
+                'Unknown device'
+            ));
 
         $deviceRaw = DeviceToken::issue($member, $deviceInfo);
 
@@ -229,22 +254,34 @@ trait TokenLoginControllerTrait
     public function login(HTTPRequest $request)
     {
         if (!$request->isPOST()) {
-            return $this->json(['success' => false, 'error' => 'POST required'], 405);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORPOSTREQUIRED',
+                'POST required'
+            )], 405);
         }
 
         $raw = $request->getHeader('X-Device-Token') ?: $request->postVar('device_token');
         if (!$raw) {
-            return $this->json(['success' => false, 'error' => 'Missing device token'], 400);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORMISSINGDEVICETOKEN',
+                'Missing device token'
+            )], 400);
         }
 
         $device = DeviceToken::findValid((string) $raw);
         if (!$device) {
-            return $this->json(['success' => false, 'error' => 'Invalid or expired device token'], 401);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORINVALIDDEVICETOKEN',
+                'Invalid or expired device token'
+            )], 401);
         }
 
         $member = $device->Member();
         if (!$member || !$member->exists()) {
-            return $this->json(['success' => false, 'error' => 'Token has no member'], 401);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORNOMEMBER',
+                'Token has no member'
+            )], 401);
         }
 
         // Log in through SilverStripe's own security system: this sets the
@@ -276,7 +313,10 @@ trait TokenLoginControllerTrait
     {
         $raw = $request->getHeader('X-Device-Token') ?: $request->postVar('device_token');
         if (!$raw) {
-            return $this->json(['success' => false, 'error' => 'Missing device token'], 400);
+            return $this->json(['success' => false, 'error' => _t(
+                'Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait.ERRORMISSINGDEVICETOKEN',
+                'Missing device token'
+            )], 400);
         }
 
         $device = DeviceToken::get()->filter('TokenHash', hash('sha256', (string) $raw))->first();

@@ -1,0 +1,39 @@
+en:
+  Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait:
+    ERRORINVALIDDEVICETOKEN: 'Invalid or expired device token'
+    ERRORINVALIDTOKEN: 'Invalid or expired token'
+    ERRORMISSINGDEVICETOKEN: 'Missing device token'
+    ERRORMISSINGTOKEN: 'Missing token'
+    ERRORNOMEMBER: 'Token has no member'
+    ERRORNOTAUTHENTICATED: 'Not authenticated'
+    ERRORPOSTREQUIRED: 'POST required'
+    TITLE: 'Mobile login'
+    UNKNOWNDEVICE: 'Unknown device'
+  Joelgrondrup\Tokenauth\MobileLogin:
+    APPSTORE: 'Download on the App Store'
+    CREATEERROR: 'Could not create code.'
+    EXPIRED: 'Code expired.'
+    GOOGLEPLAY: 'Get it on Google Play'
+    HEADING: 'Log in with your app'
+    INTRO: 'Open the app and scan this code. It refreshes automatically.'
+    NETWORKERROR: 'Network error.'
+    NEWCODE: 'New code'
+    PAIRED: Paired
+    PAIREDSTATUS: 'Your device is now paired.'
+    QRALT: 'Login QR code'
+    WAITING: 'Waiting for scan…'
+  Joelgrondrup\Tokenauth\Model\DeviceToken:
+    DEVICEINFO: Device
+    EXPIRES: Expires
+    LASTUSED: 'Last used'
+    MEMBER: Member
+    PLURALNAME: 'Device tokens'
+    SINGULARNAME: 'Device token'
+  Joelgrondrup\Tokenauth\Model\PairingToken:
+    EXPIRES: Expires
+    MEMBER: Member
+    PLURALNAME: 'Pairing tokens'
+    SINGULARNAME: 'Pairing token'
+    USED: Used
+  Joelgrondrup\Tokenauth\ModelAdmin\TokenAdmin:
+    MENUTITLE: Tokens

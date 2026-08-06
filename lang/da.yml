@@ -1,0 +1,39 @@
+da:
+  Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait:
+    ERRORINVALIDDEVICETOKEN: 'Ugyldigt eller udløbet enhedstoken'
+    ERRORINVALIDTOKEN: 'Ugyldigt eller udløbet token'
+    ERRORMISSINGDEVICETOKEN: 'Manglende enhedstoken'
+    ERRORMISSINGTOKEN: 'Manglende token'
+    ERRORNOMEMBER: 'Token er ikke knyttet til en bruger'
+    ERRORNOTAUTHENTICATED: 'Ikke logget ind'
+    ERRORPOSTREQUIRED: 'POST påkrævet'
+    TITLE: 'Mobil-login'
+    UNKNOWNDEVICE: 'Ukendt enhed'
+  Joelgrondrup\Tokenauth\MobileLogin:
+    APPSTORE: 'Hent i App Store'
+    CREATEERROR: 'Koden kunne ikke oprettes.'
+    EXPIRED: 'Koden er udløbet.'
+    GOOGLEPLAY: 'Hent på Google Play'
+    HEADING: 'Log ind med appen'
+    INTRO: 'Åbn appen og scan denne kode. Den fornyes automatisk.'
+    NETWORKERROR: 'Netværksfejl.'
+    NEWCODE: 'Ny kode'
+    PAIRED: Parret
+    PAIREDSTATUS: 'Din enhed er nu parret.'
+    QRALT: 'QR-kode til login'
+    WAITING: 'Venter på scanning…'
+  Joelgrondrup\Tokenauth\Model\DeviceToken:
+    DEVICEINFO: Enhed
+    EXPIRES: Udløber
+    LASTUSED: 'Sidst brugt'
+    MEMBER: Bruger
+    PLURALNAME: Enhedstokens
+    SINGULARNAME: Enhedstoken
+  Joelgrondrup\Tokenauth\Model\PairingToken:
+    EXPIRES: Udløber
+    MEMBER: Bruger
+    PLURALNAME: Parringstokens
+    SINGULARNAME: Parringstoken
+    USED: Brugt
+  Joelgrondrup\Tokenauth\ModelAdmin\TokenAdmin:
+    MENUTITLE: Tokens

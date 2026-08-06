@@ -39,13 +39,27 @@ class PairingToken extends DataObject
         'TokenHash' => true,
     ];
 
+    // Listed without titles on purpose: the (translated) titles come from
+    // fieldLabels() below.
     private static $summary_fields = [
-        'Member.Title' => 'Member',
-        'Expires'      => 'Expires',
-        'Used.Nice'    => 'Used',
+        'Member.Title',
+        'Expires',
+        'Used.Nice',
     ];
 
     private static $default_sort = 'Created DESC';
+
+    public function fieldLabels($includerelations = true)
+    {
+        $labels = parent::fieldLabels($includerelations);
+
+        $labels['Member.Title'] = _t(self::class . '.MEMBER', 'Member');
+        $labels['Expires']      = _t(self::class . '.EXPIRES', 'Expires');
+        $labels['Used.Nice']    = _t(self::class . '.USED', 'Used');
+        $labels['Used']         = $labels['Used.Nice'];
+
+        return $labels;
+    }
 
     /**
      * Generate a new pairing token for the given member and return the RAW
