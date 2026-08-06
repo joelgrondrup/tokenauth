@@ -1,0 +1,39 @@
+sv:
+  Joelgrondrup\Tokenauth\Control\TokenLoginControllerTrait:
+    ERRORINVALIDDEVICETOKEN: 'Ogiltig eller utgången enhetstoken'
+    ERRORINVALIDTOKEN: 'Ogiltig eller utgången token'
+    ERRORMISSINGDEVICETOKEN: 'Enhetstoken saknas'
+    ERRORMISSINGTOKEN: 'Token saknas'
+    ERRORNOMEMBER: 'Token är inte kopplad till en användare'
+    ERRORNOTAUTHENTICATED: 'Inte inloggad'
+    ERRORPOSTREQUIRED: 'POST krävs'
+    TITLE: Mobilinloggning
+    UNKNOWNDEVICE: 'Okänd enhet'
+  Joelgrondrup\Tokenauth\MobileLogin:
+    APPSTORE: 'Ladda ner på App Store'
+    CREATEERROR: 'Koden kunde inte skapas.'
+    EXPIRED: 'Koden har gått ut.'
+    GOOGLEPLAY: 'Hämta på Google Play'
+    HEADING: 'Logga in med appen'
+    INTRO: 'Öppna appen och skanna den här koden. Den förnyas automatiskt.'
+    NETWORKERROR: Nätverksfel.
+    NEWCODE: 'Ny kod'
+    PAIRED: Parkopplad
+    PAIREDSTATUS: 'Din enhet är nu parkopplad.'
+    QRALT: 'QR-kod för inloggning'
+    WAITING: 'Väntar på skanning…'
+  Joelgrondrup\Tokenauth\Model\DeviceToken:
+    DEVICEINFO: Enhet
+    EXPIRES: 'Går ut'
+    LASTUSED: 'Senast använd'
+    MEMBER: Användare
+    PLURALNAME: Enhetstokens
+    SINGULARNAME: Enhetstoken
+  Joelgrondrup\Tokenauth\Model\PairingToken:
+    EXPIRES: 'Går ut'
+    MEMBER: Användare
+    PLURALNAME: Parkopplingstokens
+    SINGULARNAME: Parkopplingstoken
+    USED: Använd
+  Joelgrondrup\Tokenauth\ModelAdmin\TokenAdmin:
+    MENUTITLE: Tokens
